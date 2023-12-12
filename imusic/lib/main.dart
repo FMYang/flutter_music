@@ -109,7 +109,8 @@ class _ListWidgeState extends State<ListWidget> {
               if (value >= 0)
                 PlayInfoWidget(
                     name: songData[value].authorName,
-                    author: songData[value].songName)
+                    author: songData[value].songName,
+                    img: songData[value].icon)
             ],
           );
         });

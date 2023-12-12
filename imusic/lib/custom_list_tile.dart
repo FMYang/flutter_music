@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -45,6 +46,8 @@ class CustomListTile extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),
                       child: CachedNetworkImage(
+                          width: 54,
+                          height: 54,
                           imageUrl: img,
                           placeholder: (context, url) {
                             return Image.asset(
@@ -62,7 +65,7 @@ class CustomListTile extends StatelessWidget {
                         child: Text(name,
                             style: !isSelected
                                 ? const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 16,
                                     color: Colors.black,
                                     fontWeight: FontWeight.normal,
                                   )

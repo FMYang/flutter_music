@@ -1,12 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:imusic/audio_background.dart';
 
 class PlayInfoWidget extends StatelessWidget {
   final String name;
   final String author;
+  final String img;
 
-  const PlayInfoWidget({super.key, required this.name, required this.author});
+  const PlayInfoWidget(
+      {super.key, required this.name, required this.author, required this.img});
 
   @override
   Widget build(BuildContext context) {
@@ -24,12 +27,14 @@ class PlayInfoWidget extends StatelessWidget {
             child: Row(
               children: [
                 ClipOval(
-                  child: CachedNetworkImage(
-                      width: 54,
-                      height: 54,
-                      imageUrl:
-                          'http://imge.kugou.com/stdmusic/20230920/20230920142503632013.jpg'),
-                ),
+                    child: CachedNetworkImage(
+                        width: 54,
+                        height: 54,
+                        imageUrl: img,
+                        placeholder: (context, url) {
+                          return Image.asset(
+                              'assets/images/svg_kg_playpage__album_default_01@3x.png');
+                        })),
                 Container(
                   height: 25,
                   alignment: Alignment.centerLeft,
