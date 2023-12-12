@@ -1,5 +1,3 @@
-// import 'package:flutter/foundation.dart';
-
 import 'package:audio_service/audio_service.dart';
 
 class Song {
@@ -7,27 +5,32 @@ class Song {
   String authorName;
   String icon;
   String albumId;
+  int timelength;
 
-  Song({
-    required this.albumId,
-    required this.songName,
-    required this.authorName,
-    required this.icon,
-  });
+  Song(
+      {required this.albumId,
+      required this.songName,
+      required this.authorName,
+      required this.icon,
+      required this.timelength});
 
   factory Song.fromJson(Map<String, dynamic> json) {
     return Song(
         albumId: json['album_id'],
         songName: json['song_name'],
         authorName: json['author_name'],
-        icon: json['img']);
+        icon: json['img'],
+        timelength: json['timelength']);
   }
 
   /// Converts the song info to [AudioService] media item.
   MediaItem toMediaItem() => MediaItem(
-        id: albumId,
-        album: songName,
-        artist: authorName,
-        title: songName,
-      );
+      id: albumId,
+      album: songName,
+      artist: authorName,
+      title: songName,
+      duration: Duration(
+          minutes: (((timelength / 1000.0) / 60 % 60).toInt()),
+          seconds: (((timelength / 1000.0) % 60).toInt())),
+      artUri: Uri.parse(icon));
 }

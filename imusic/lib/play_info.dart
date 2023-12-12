@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:imusic/audio_player.dart';
+import 'package:imusic/audio_background.dart';
 
 class PlayInfoWidget extends StatelessWidget {
   final String name;
@@ -45,10 +45,10 @@ class PlayInfoWidget extends StatelessWidget {
                 const Spacer(),
                 IconButton(
                     onPressed: () {
-                      MusicPlayer().playOrPause();
+                      MyAudioHandler().playOrPause();
                     },
                     icon: ValueListenableBuilder(
-                        valueListenable: MusicPlayer().playingNotifier,
+                        valueListenable: MyAudioHandler().playingNotifier,
                         builder: (context, value, child) {
                           return Image.asset(
                               value
@@ -59,7 +59,7 @@ class PlayInfoWidget extends StatelessWidget {
                         })),
                 IconButton(
                     onPressed: () {
-                      MusicPlayer().playNext();
+                      MyAudioHandler().skipToNext();
                     },
                     icon: Image.asset(
                         'assets/images/miniapp_playbar_next@2x.png',
