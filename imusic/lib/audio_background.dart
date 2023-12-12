@@ -125,10 +125,17 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     });
   }
 
-  @override
-  Future<void> play() async {
-    _player.play();
+  // 播放暂停
+  Future<void> playOrPause() async {
+    if (_player.playing) {
+      pause();
+    } else {
+      play();
+    }
   }
+
+  @override
+  Future<void> play() => _player.play();
 
   @override
   Future<void> pause() => _player.pause();
@@ -137,7 +144,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   Future<void> stop() => _player.stop();
 
   @override
-  Future<void> seek(Duration position) async {}
+  Future<void> seek(Duration position) => _player.seek(position);
 
   @override
   Future<void> skipToQueueItem(int index) async {
@@ -147,16 +154,9 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     }
     indexNotifier.value = index;
     _player.seek(Duration.zero, index: index);
+    play();
   }
 
   @override
   Future<void> skipToNext() => _player.seekToNext();
-
-  Future<void> playOrPause() async {
-    if (_player.playing) {
-      pause();
-    } else {
-      play();
-    }
-  }
 }

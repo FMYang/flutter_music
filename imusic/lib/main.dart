@@ -7,7 +7,6 @@ import 'package:imusic/custom_list_tile.dart';
 import 'package:imusic/play_info.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:imusic/song.dart';
-import 'package:just_audio/just_audio.dart';
 
 // 程序入口函数main()
 void main() async {
@@ -66,12 +65,6 @@ class _ListWidgeState extends State<ListWidget> {
   // 播放歌曲
   void playSong(int index) {
     MyAudioHandler().skipToQueueItem(index);
-    // MusicPlayer().indexNotifier.value = index;
-
-    // AudioPlayer player = AudioPlayer();
-    // player.setAsset('assets/audio/简单爱.mp3');
-    // player.load();
-    // player.play();
   }
 
   @override
