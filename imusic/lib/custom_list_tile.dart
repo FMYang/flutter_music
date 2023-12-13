@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+// 自定义cell
 class CustomListTile extends StatelessWidget {
   final String img;
   final String name;

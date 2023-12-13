@@ -34,19 +34,16 @@ class PlayInfoWidget extends StatelessWidget {
                           return Image.asset(
                               'assets/images/svg_kg_playpage__album_default_01@3x.png');
                         })),
-                Container(
-                  height: 25,
-                  alignment: Alignment.centerLeft,
-                  margin: const EdgeInsets.only(left: 10, right: 0),
+                const SizedBox(width: 10),
+                Expanded(
                   child: SizedBox(
-                      width: 200,
+                      height: 25,
                       child: Text(
                         '$name - $author',
                         style:
                             const TextStyle(color: Colors.black, fontSize: 16),
                       )),
                 ),
-                const Spacer(),
                 IconButton(
                     onPressed: () {
                       MyAudioHandler().playOrPause();

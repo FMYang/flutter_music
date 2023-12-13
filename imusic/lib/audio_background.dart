@@ -26,6 +26,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   // 监听播放的下标，为-1表示没有播放歌曲
   ValueNotifier<int> indexNotifier = ValueNotifier(-1);
+  // 监听是否播放中
   ValueNotifier<bool> playingNotifier = ValueNotifier(false);
 
   // 单例
@@ -134,18 +135,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     }
   }
 
-  @override
-  Future<void> play() => _player.play();
-
-  @override
-  Future<void> pause() => _player.pause();
-
-  @override
-  Future<void> stop() => _player.stop();
-
-  @override
-  Future<void> seek(Duration position) => _player.seek(position);
-
+  // 播放指定的item
   @override
   Future<void> skipToQueueItem(int index) async {
     if (index < 0 || index >= queue.value.length) return;
@@ -157,6 +147,27 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     play();
   }
 
+  // 播放
+  @override
+  Future<void> play() => _player.play();
+
+  // 暂停
+  @override
+  Future<void> pause() => _player.pause();
+
+  // 停止
+  @override
+  Future<void> stop() => _player.stop();
+
+  // 快进/快退
+  @override
+  Future<void> seek(Duration position) => _player.seek(position);
+
+  // 下一首
   @override
   Future<void> skipToNext() => _player.seekToNext();
+
+  // 上一首
+  @override
+  Future<void> skipToPrevious() => _player.seekToPrevious();
 }
