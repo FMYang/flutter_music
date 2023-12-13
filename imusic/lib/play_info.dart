@@ -58,15 +58,15 @@ class PlayInfoWidget extends StatelessWidget {
                               value
                                   ? 'assets/images/tab_center_pause@2x.png'
                                   : 'assets/images/tab_center_play@2x.png',
-                              width: 25,
-                              height: 25);
+                              width: 20,
+                              height: 20);
                         })),
                 IconButton(
                     onPressed: () {
                       MyAudioHandler().skipToNext();
                     },
                     icon: Image.asset('assets/images/tab_center_next@2x.png',
-                        width: 25, height: 25)),
+                        width: 20, height: 20)),
                 const SizedBox(width: 10),
               ],
             )));
