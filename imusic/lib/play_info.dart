@@ -56,8 +56,8 @@ class PlayInfoWidget extends StatelessWidget {
                         builder: (context, value, child) {
                           return Image.asset(
                               value
-                                  ? 'assets/images/miniapp_playbar_pause@2x.png'
-                                  : 'assets/images/miniapp_playbar_play@2x.png',
+                                  ? 'assets/images/tab_center_pause@2x.png'
+                                  : 'assets/images/tab_center_play@2x.png',
                               width: 25,
                               height: 25);
                         })),
@@ -65,10 +65,8 @@ class PlayInfoWidget extends StatelessWidget {
                     onPressed: () {
                       MyAudioHandler().skipToNext();
                     },
-                    icon: Image.asset(
-                        'assets/images/miniapp_playbar_next@2x.png',
-                        width: 25,
-                        height: 25)),
+                    icon: Image.asset('assets/images/tab_center_next@2x.png',
+                        width: 25, height: 25)),
                 const SizedBox(width: 10),
               ],
             )));
