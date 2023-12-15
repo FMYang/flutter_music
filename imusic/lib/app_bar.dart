@@ -6,7 +6,7 @@ class SharedAppBar extends StatelessWidget implements PreferredSizeWidget {
   const SharedAppBar({super.key, required this.titleText});
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kMinInteractiveDimension);
 
   @override
   Widget build(BuildContext context) {

@@ -13,12 +13,12 @@ import 'package:imusic/song.dart';
 void main() async {
   // runApp(const ViewWidget());
   await initAudioService();
-  runApp(const ListApp());
+  runApp(const MusicApp());
 }
 
 // 2.列表组件
-class ListApp extends StatelessWidget {
-  const ListApp({Key? key}) : super(key: key);
+class MusicApp extends StatelessWidget {
+  const MusicApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -46,11 +46,33 @@ class ListWidget extends StatefulWidget {
 
 class _ListWidgeState extends State<ListWidget> {
   List<Song> songData = [];
+  final ScrollController _controller = ScrollController();
 
   @override
   void initState() {
     super.initState();
     loadJsonFile();
+
+    MyAudioHandler().indexNotifier.addListener(() {
+      scrollToIndex();
+    });
+  }
+
+  void scrollToIndex() {
+    if (!_controller.position.hasContentDimensions) return;
+    int index = MyAudioHandler().indexNotifier.value;
+    if (index < 5) {
+      _controller.jumpTo(0);
+      return;
+    }
+    if (index > songData.length - 5) {
+      _controller.jumpTo(_controller.position.maxScrollExtent);
+      return;
+    }
+    final double itemHeight =
+        _controller.position.maxScrollExtent / songData.length;
+    final double offset = itemHeight * index - itemHeight * 4;
+    _controller.jumpTo(offset);
   }
 
   // 加载本地json数据
@@ -84,6 +106,7 @@ class _ListWidgeState extends State<ListWidget> {
                   margin: const EdgeInsets.only(
                       left: 20, right: 20, bottom: 20, top: 10),
                   child: ListView.builder(
+                      controller: _controller,
                       itemCount: songData.length,
                       itemBuilder: (context, index) {
                         Song song = songData[index];
@@ -100,18 +123,17 @@ class _ListWidgeState extends State<ListWidget> {
                       }),
                 ),
               ),
-              if (value >= 0)
-                PlayInfoWidget(
-                    name: songData[value].authorName,
-                    author: songData[value].songName,
-                    img: songData[value].icon,
-                    tapAction: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const ListDetail(),
-                              fullscreenDialog: true));
-                    })
+              PlayInfoWidget(
+                  name: songData[value].authorName,
+                  author: songData[value].songName,
+                  img: songData[value].icon,
+                  tapAction: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ListDetail(),
+                            fullscreenDialog: true));
+                  })
             ],
           );
         });

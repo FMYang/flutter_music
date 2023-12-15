@@ -97,6 +97,8 @@ class _RotatingWidgetState extends State<RotatingWidget>
     _controller =
         AnimationController(duration: const Duration(seconds: 10), vsync: this)
           ..repeat(period: const Duration(seconds: 10));
+    // 设置动画初始值为停止状态
+    _controller.value = 0;
     _animation = Tween(begin: 0.0, end: 1.0).animate(_controller);
 
     MyAudioHandler().playingNotifier.addListener(() {
@@ -110,7 +112,7 @@ class _RotatingWidgetState extends State<RotatingWidget>
 
   @override
   void dispose() {
-    // _controller.dispose();
+    _controller.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

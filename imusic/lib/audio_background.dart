@@ -37,22 +37,24 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   ValueNotifier<List<LRCLine>> lrcListNotifier = ValueNotifier([]);
   // 监听当前播放的歌词所在的行
   ValueNotifier<int> lrcLineNotifier = ValueNotifier(0);
-  //
+  // 当前歌曲的时长
   ValueNotifier<String> durationNotifier = ValueNotifier('00:00');
-  //
+  // 当前歌曲的播放时长
   ValueNotifier<String> playTimeNotifier = ValueNotifier('00:00');
-  //
+  // 当前歌曲的播放进度
   ValueNotifier<double> progressNotifier = ValueNotifier(0);
-  //
+  // 当前歌曲的时长
   int songDuration = 0;
 
   // 单例
   MyAudioHandler._internal() {
-    loadPlayList();
-    _notifyAudioHandlerAboutPlaybackEvents();
-    _listenToPlaybackState();
-    _listenForCurrentSongIndexChanges();
-    _listenForDurationChanges();
+    Future.delayed(Duration.zero, () async {
+      await loadPlayList();
+      _notifyAudioHandlerAboutPlaybackEvents();
+      _listenToPlaybackState();
+      _listenForCurrentSongIndexChanges();
+      _listenForDurationChanges();
+    });
   }
 
   // 获取单例实例的方法
@@ -133,20 +135,23 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   // 监听播放歌曲下标
   void _listenForCurrentSongIndexChanges() {
-    _player.currentIndexStream.listen((index) {
+    _player.currentIndexStream.listen((index) async {
       final playlist = queue.value;
       if (index == null || playlist.isEmpty) return;
       if (_player.shuffleModeEnabled) {
         index = _player.shuffleIndices!.indexOf(index);
       }
-      indexNotifier.value = index;
-      mediaItem.add(playlist[index]);
+      if (indexNotifier.value != index) {
+        indexNotifier.value = index;
+        mediaItem.add(playlist[index]);
 
-      Song song = songData[index];
-      songDuration = song.timelength ~/ 1000;
-      lrclist = LRCParse.parse(song.lrc);
-      lrcListNotifier.value = lrclist;
-      durationNotifier.value = LRCParse.formatDuration(song.timelength / 1000);
+        Song song = songData[index];
+        songDuration = song.timelength ~/ 1000;
+        durationNotifier.value =
+            LRCParse.formatDuration(song.timelength / 1000);
+        lrclist = await LRCParse.parse(song.lrc);
+        lrcListNotifier.value = lrclist;
+      }
     });
   }
 
@@ -201,12 +206,14 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   @override
   Future<void> skipToQueueItem(int index) async {
     if (index < 0 || index >= queue.value.length) return;
-    if (_player.shuffleModeEnabled) {
-      index = _player.shuffleIndices![index];
-    }
-    indexNotifier.value = index;
-    _player.seek(Duration.zero, index: index);
-    play();
+    try {
+      if (_player.shuffleModeEnabled) {
+        index = _player.shuffleIndices![index];
+      }
+      indexNotifier.value = index;
+      _player.seek(Duration.zero, index: index);
+      play();
+    } finally {}
   }
 
   // 播放

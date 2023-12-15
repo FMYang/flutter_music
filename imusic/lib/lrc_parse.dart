@@ -16,7 +16,7 @@ class LRCParse {
     return Duration(seconds: seconds.toInt());
   }
 
-  static List<LRCLine> parse(String content) {
+  static Future<List<LRCLine>> parse(String content) async {
     final array = content.split('\n');
     final lrc = <LRCLine>[];
 

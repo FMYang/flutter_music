@@ -37,7 +37,7 @@ class _ContentWidgetState extends State<ContentWidget> {
           Positioned.fill(
               child: Image.asset('assets/images/bg_playview_iPhoneX@2x.jpg',
                   fit: BoxFit.cover)),
-          Positioned.fill(child: Container(color: Colors.black26)),
+          Positioned.fill(child: Container(color: Colors.black38)),
           Positioned(
               child: SizedBox(
                   height: MediaQuery.of(context).size.height,
@@ -68,6 +68,8 @@ class _ListWidgetState extends State<ListWidget> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      MyAudioHandler().lrcListNotifier.value =
+          MyAudioHandler().lrcListNotifier.value;
       scrollToIndex(MyAudioHandler().lrcLineNotifier.value, false);
     });
   }
