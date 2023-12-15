@@ -4,19 +4,19 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        // {
-        //     "name": "imusic",
-        //     "cwd": "imusic",
-        //     "request": "launch",
-        //     "type": "dart"
-        // },
-        // {
-        //     "name": "imusic (profile mode)",
-        //     "cwd": "imusic",
-        //     "request": "launch",
-        //     "type": "dart",
-        //     "flutterMode": "profile"
-        // },
+        {
+            "name": "imusic",
+            "cwd": "imusic",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "imusic (profile mode)",
+            "cwd": "imusic",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
         {
             "name": "imusic (release mode)",
             "cwd": "imusic",

@@ -6,13 +6,15 @@ class Song {
   String icon;
   String albumId;
   int timelength;
+  String lrc;
 
   Song(
       {required this.albumId,
       required this.songName,
       required this.authorName,
       required this.icon,
-      required this.timelength});
+      required this.timelength,
+      required this.lrc});
 
   factory Song.fromJson(Map<String, dynamic> json) {
     return Song(
@@ -20,7 +22,8 @@ class Song {
         songName: json['song_name'],
         authorName: json['author_name'],
         icon: json['img'],
-        timelength: json['timelength']);
+        timelength: json['timelength'],
+        lrc: json['lrc']);
   }
 
   /// Converts the song info to [AudioService] media item.

@@ -22,13 +22,6 @@ class CustomListTile extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
-          // decoration: const BoxDecoration(
-          //   border: Border(
-          //       bottom: BorderSide(
-          //     color: Colors.grey,
-          //     width: 0.0,
-          //   )),
-          // ),
           child: Container(
             color: isSelected
                 ? const Color(0x11EBEFFF).withOpacity(0.4)
@@ -36,10 +29,6 @@ class CustomListTile extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                    // decoration: BoxDecoration(
-                    //   color: Colors.grey,
-                    //   borderRadius: BorderRadius.circular(8.0),
-                    // ),
                     margin: const EdgeInsets.only(left: 15),
                     width: 50,
                     height: 50,
@@ -59,7 +48,7 @@ class CustomListTile extends StatelessWidget {
                   child: Column(children: [
                     Container(
                         // color: Colors.white,
-                        height: 25,
+                        // height: 25,
                         alignment: Alignment.centerLeft,
                         margin: const EdgeInsets.only(left: 10, right: 10),
                         child: Text(name,
@@ -81,6 +70,7 @@ class CustomListTile extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         margin: const EdgeInsets.only(left: 10, right: 10),
                         child: Text(author,
+                            overflow: TextOverflow.ellipsis,
                             style: !isSelected
                                 ? const TextStyle(
                                     fontSize: 14,

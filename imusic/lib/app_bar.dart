@@ -11,11 +11,11 @@ class SharedAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Center(
-          child: Text(
+      title: Text(
         titleText,
         style: const TextStyle(color: Colors.black),
-      )),
+      ),
+      centerTitle: true,
       // backgroundColor: Colors.white,
       elevation: 0,
     );

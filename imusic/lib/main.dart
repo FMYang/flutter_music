@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:imusic/app_bar.dart';
 import 'package:imusic/audio_background.dart';
 import 'package:imusic/custom_list_tile.dart';
+import 'package:imusic/list_detail.dart';
 import 'package:imusic/play_info.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:imusic/song.dart';
@@ -54,11 +55,10 @@ class _ListWidgeState extends State<ListWidget> {
 
   // 加载本地json数据
   Future<void> loadJsonFile() async {
-    String jsonString = await rootBundle.loadString('assets/jsons/周杰伦.json');
+    String jsonString = await rootBundle.loadString('assets/jsons/top500.json');
     final List<dynamic> jsonData = json.decode(jsonString);
     setState(() {
       songData = jsonData.map((item) => Song.fromJson(item)).toList();
-      // MusicPlayer().songList = songData;
     });
   }
 
@@ -90,12 +90,6 @@ class _ListWidgeState extends State<ListWidget> {
                         return GestureDetector(
                             onTap: () {
                               playSong(index);
-                              // Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //         builder: (context) =>
-                              //             ListDetail(index: index.toString()),
-                              //         fullscreenDialog: true));
                             },
                             child: CustomListTile(
                               img: song.icon,
@@ -110,7 +104,14 @@ class _ListWidgeState extends State<ListWidget> {
                 PlayInfoWidget(
                     name: songData[value].authorName,
                     author: songData[value].songName,
-                    img: songData[value].icon)
+                    img: songData[value].icon,
+                    tapAction: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ListDetail(),
+                              fullscreenDialog: true));
+                    })
             ],
           );
         });

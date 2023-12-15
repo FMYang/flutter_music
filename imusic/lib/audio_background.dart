@@ -1,8 +1,8 @@
 import 'dart:convert';
-
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:imusic/lrc_parse.dart';
 import 'package:imusic/song.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -23,11 +23,28 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final AudioPlayer _player = AudioPlayer();
   final ConcatenatingAudioSource _playList =
       ConcatenatingAudioSource(children: []);
+  // 歌曲列表
+  List<Song> songData = [];
+  // 当前播放的歌曲的歌词列表
+  List<LRCLine> lrclist = [];
+  bool sliderChanging = false;
 
   // 监听播放的下标，为-1表示没有播放歌曲
   ValueNotifier<int> indexNotifier = ValueNotifier(-1);
   // 监听是否播放中
   ValueNotifier<bool> playingNotifier = ValueNotifier(false);
+  // 监听歌词列表状态
+  ValueNotifier<List<LRCLine>> lrcListNotifier = ValueNotifier([]);
+  // 监听当前播放的歌词所在的行
+  ValueNotifier<int> lrcLineNotifier = ValueNotifier(0);
+  //
+  ValueNotifier<String> durationNotifier = ValueNotifier('00:00');
+  //
+  ValueNotifier<String> playTimeNotifier = ValueNotifier('00:00');
+  //
+  ValueNotifier<double> progressNotifier = ValueNotifier(0);
+  //
+  int songDuration = 0;
 
   // 单例
   MyAudioHandler._internal() {
@@ -35,6 +52,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     _notifyAudioHandlerAboutPlaybackEvents();
     _listenToPlaybackState();
     _listenForCurrentSongIndexChanges();
+    _listenForDurationChanges();
   }
 
   // 获取单例实例的方法
@@ -45,9 +63,9 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   // 加载本地json数据
   Future<void> loadPlayList() async {
-    String jsonString = await rootBundle.loadString('assets/jsons/周杰伦.json');
+    String jsonString = await rootBundle.loadString('assets/jsons/top500.json');
     final List<dynamic> jsonData = json.decode(jsonString);
-    List<Song> songData = jsonData.map((item) => Song.fromJson(item)).toList();
+    songData = jsonData.map((item) => Song.fromJson(item)).toList();
     List<MediaItem> mediaItems = songData.map((e) => e.toMediaItem()).toList();
     List<AudioSource> sources = mediaItems
         .map((e) => AudioSource.asset('assets/audio/${e.title}.mp3', tag: e))
@@ -123,7 +141,51 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       }
       indexNotifier.value = index;
       mediaItem.add(playlist[index]);
+
+      Song song = songData[index];
+      songDuration = song.timelength ~/ 1000;
+      lrclist = LRCParse.parse(song.lrc);
+      lrcListNotifier.value = lrclist;
+      durationNotifier.value = LRCParse.formatDuration(song.timelength / 1000);
     });
+  }
+
+  // 监听时间
+  void _listenForDurationChanges() {
+    _player.positionStream.listen((position) {
+      if (lrclist.isEmpty) return;
+      int index = findCurPlayLrcIndex(position.inSeconds);
+      if (lrcLineNotifier.value != index) {
+        lrcLineNotifier.value = index;
+      }
+      double playTime = position.inSeconds.toDouble();
+      playTimeNotifier.value = LRCParse.formatDuration(playTime);
+      double progress = playTime / songDuration;
+      if (progress >= 1.0) {
+        progress = 1.0;
+      }
+      if (!sliderChanging) {
+        progressNotifier.value = progress;
+      }
+    });
+  }
+
+  // 找到歌词所在的行
+  int findCurPlayLrcIndex(int time) {
+    int index = 0;
+    for (int i = 0; i < lrclist.length; i++) {
+      LRCLine line = lrclist[i];
+      int lineTime = line.time.inSeconds;
+      if (time <= lineTime) {
+        if (i > 0) {
+          index = i - 1;
+        }
+        break;
+      } else {
+        index = lrclist.length - 1;
+      }
+    }
+    return index;
   }
 
   // 播放暂停
