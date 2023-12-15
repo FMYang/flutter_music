@@ -68,8 +68,6 @@ class _ListWidgetState extends State<ListWidget> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      MyAudioHandler().lrcListNotifier.value =
-          MyAudioHandler().lrcListNotifier.value;
       scrollToIndex(MyAudioHandler().lrcLineNotifier.value, false);
     });
   }
@@ -112,10 +110,9 @@ class _ListWidgetState extends State<ListWidget> {
             return ListView.separated(
                 controller: _scrollController,
                 separatorBuilder: (context, index) => Container(),
-                itemCount: MyAudioHandler().lrcListNotifier.value.length,
+                itemCount: value.length,
                 itemBuilder: (context, index) {
-                  String lrcText =
-                      MyAudioHandler().lrcListNotifier.value[index].text;
+                  String lrcText = value[index].text;
                   return ValueListenableBuilder(
                       valueListenable: MyAudioHandler().lrcLineNotifier,
                       builder: (context, innerValue, child) {

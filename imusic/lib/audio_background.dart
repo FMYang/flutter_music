@@ -141,17 +141,14 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       if (_player.shuffleModeEnabled) {
         index = _player.shuffleIndices!.indexOf(index);
       }
-      if (indexNotifier.value != index) {
-        indexNotifier.value = index;
-        mediaItem.add(playlist[index]);
+      indexNotifier.value = index;
+      mediaItem.add(playlist[index]);
 
-        Song song = songData[index];
-        songDuration = song.timelength ~/ 1000;
-        durationNotifier.value =
-            LRCParse.formatDuration(song.timelength / 1000);
-        lrclist = await LRCParse.parse(song.lrc);
-        lrcListNotifier.value = lrclist;
-      }
+      Song song = songData[index];
+      songDuration = song.timelength ~/ 1000;
+      durationNotifier.value = LRCParse.formatDuration(song.timelength / 1000);
+      lrclist = await LRCParse.parse(song.lrc);
+      lrcListNotifier.value = lrclist;
     });
   }
 
