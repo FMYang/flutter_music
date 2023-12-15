@@ -79,7 +79,7 @@ class _ListWidgetState extends State<ListWidget> {
   }
 
   void scrollToIndex(int index, bool animated) {
-    if (_scrollController.positions.isEmpty) return;
+    if (!_scrollController.position.hasContentDimensions) return;
     if (index < 5) {
       _scrollController.jumpTo(0);
       return;
