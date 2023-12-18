@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imusic/lrc_parse.dart';
 import 'package:imusic/song.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // 初始化AudioService
 Future<AudioHandler> initAudioService() async {
@@ -19,6 +23,39 @@ Future<AudioHandler> initAudioService() async {
   );
 }
 
+// 播放模式
+enum MyLoopMode { list, one, random }
+
+enum MyClockMode { off, time15, time30, time60 }
+
+extension MyClockModeExtesion on MyClockMode {
+  String titleText() {
+    switch (this) {
+      case MyClockMode.off:
+        return "assets/images/kg_ic_player_menu_music_clock_normal@3x.png";
+      case MyClockMode.time15:
+        return "15:00";
+      case MyClockMode.time30:
+        return "30:00";
+      case MyClockMode.time60:
+        return "60:00";
+    }
+  }
+
+  int seconds() {
+    switch (this) {
+      case MyClockMode.off:
+        return 0;
+      case MyClockMode.time15:
+        return 15 * 60;
+      case MyClockMode.time30:
+        return 30 * 60;
+      case MyClockMode.time60:
+        return 60 * 60;
+    }
+  }
+}
+
 class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final AudioPlayer _player = AudioPlayer();
   final ConcatenatingAudioSource _playList =
@@ -27,10 +64,13 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   List<Song> songData = [];
   // 当前播放的歌曲的歌词列表
   List<LRCLine> lrclist = [];
+  // slider滑动中
   bool sliderChanging = false;
+  // 播放模式
+  MyLoopMode loopMode = MyLoopMode.list;
 
-  // 监听播放的下标，为-1表示没有播放歌曲
-  ValueNotifier<int> indexNotifier = ValueNotifier(-1);
+  // 监听播放的下标
+  ValueNotifier<int> indexNotifier = ValueNotifier(0);
   // 监听是否播放中
   ValueNotifier<bool> playingNotifier = ValueNotifier(false);
   // 监听歌词列表状态
@@ -43,8 +83,15 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   ValueNotifier<String> playTimeNotifier = ValueNotifier('00:00');
   // 当前歌曲的播放进度
   ValueNotifier<double> progressNotifier = ValueNotifier(0);
+  // 循环模式
+  ValueNotifier<MyLoopMode> loopModeNotifier = ValueNotifier(MyLoopMode.list);
   // 当前歌曲的时长
   int songDuration = 0;
+  // 定时关闭
+  ValueNotifier<MyClockMode> clockModeNotifer = ValueNotifier(MyClockMode.off);
+  int clockTime = 0;
+  ValueNotifier<int> timerNotifer = ValueNotifier(0);
+  Timer? timer;
 
   // 单例
   MyAudioHandler._internal() {
@@ -54,6 +101,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       _listenToPlaybackState();
       _listenForCurrentSongIndexChanges();
       _listenForDurationChanges();
+
+      setLoopMode(await loadPlayMode());
     });
   }
 
@@ -128,7 +177,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       if (processingState == AudioProcessingState.loading ||
           processingState == AudioProcessingState.buffering) {
       } else if (!isPlaying) {
-      } else if (processingState != AudioProcessingState.completed) {
+      } else if (processingState == AudioProcessingState.completed) {
       } else {}
     });
   }
@@ -143,7 +192,6 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       }
       indexNotifier.value = index;
       mediaItem.add(playlist[index]);
-
       Song song = songData[index];
       songDuration = song.timelength ~/ 1000;
       durationNotifier.value = LRCParse.formatDuration(song.timelength / 1000);
@@ -169,8 +217,21 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       if (!sliderChanging) {
         progressNotifier.value = progress;
       }
+      if (playTime >= (songDuration - 1)) {
+        skipToNext();
+      }
     });
   }
+
+  // 自动播放事件（调用skipToNext报错）
+  // void _listenPositionContinueChanges() {
+  //   _player.positionDiscontinuityStream.listen((event) {
+  //     print('auto play ${event.reason}');
+  //     if (event.reason == PositionDiscontinuityReason.autoAdvance) {
+  //       // skipToNext();
+  //     }
+  //   });
+  // }
 
   // 找到歌词所在的行
   int findCurPlayLrcIndex(int time) {
@@ -231,9 +292,96 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   // 下一首
   @override
-  Future<void> skipToNext() => _player.seekToNext();
+  Future<void> skipToNext() async {
+    if (loopMode == MyLoopMode.random) {
+      skipToQueueItem(randomValue());
+      return;
+    }
+    _player.seekToNext();
+  }
 
   // 上一首
   @override
-  Future<void> skipToPrevious() => _player.seekToPrevious();
+  Future<void> skipToPrevious() async {
+    if (loopMode == MyLoopMode.random) {
+      skipToQueueItem(randomValue());
+      return;
+    }
+    _player.seekToPrevious();
+  }
+
+  // 随机值
+  int randomValue() {
+    final random = Random();
+    int index = random.nextInt(songData.length);
+    return index;
+  }
+
+  // 设置播放模式
+  Future<void> setLoopMode(MyLoopMode loopMode) async {
+    switch (loopMode) {
+      case MyLoopMode.list:
+        _player.setLoopMode(LoopMode.all);
+      case MyLoopMode.one:
+        _player.setLoopMode(LoopMode.one);
+      case MyLoopMode.random:
+        _player.setLoopMode(LoopMode.off);
+      default:
+        break;
+    }
+    this.loopMode = loopMode;
+    loopModeNotifier.value = loopMode;
+  }
+
+  // 存储播放模式
+  Future<void> savePlayMode(MyLoopMode loopMode) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('playMode', loopMode.toString());
+  }
+
+  // 存储播放模式
+  Future<MyLoopMode> loadPlayMode() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? stringValue = prefs.getString('playMode');
+    if (stringValue != null) {
+      return MyLoopMode.values.firstWhere((e) => e.toString() == stringValue);
+    }
+    return MyLoopMode.list;
+  }
+
+  // 定时模式改变
+  void clockModeChanged() {
+    MyClockMode clockMode = clockModeNotifer.value;
+    if (clockMode == MyClockMode.off) {
+      clockMode = MyClockMode.time15;
+    } else if (clockMode == MyClockMode.time15) {
+      clockMode = MyClockMode.time30;
+    } else if (clockMode == MyClockMode.time30) {
+      clockMode = MyClockMode.time60;
+    } else {
+      clockMode = MyClockMode.off;
+    }
+    clockTime = clockMode.seconds();
+    clockModeNotifer.value = clockMode;
+    if (clockMode == MyClockMode.off) {
+      timer?.cancel();
+    } else {
+      startTimer();
+    }
+  }
+
+  // 倒计时定时器
+  void startTimer() {
+    timer?.cancel();
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      clockTime -= 1;
+      timerNotifer.value = clockTime;
+
+      if (clockTime <= 0) {
+        timer.cancel();
+        exit(0);
+        // SystemChannels.platform.invokeMapMethod('SystemNavigator.pop');
+      }
+    });
+  }
 }

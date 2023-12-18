@@ -8,6 +8,7 @@ import 'package:imusic/list_detail.dart';
 import 'package:imusic/play_info.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:imusic/song.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 // 程序入口函数main()
 void main() async {
@@ -46,7 +47,7 @@ class ListWidget extends StatefulWidget {
 
 class _ListWidgeState extends State<ListWidget> {
   List<Song> songData = [];
-  final ScrollController _controller = ScrollController();
+  final ItemScrollController _controller = ItemScrollController();
 
   @override
   void initState() {
@@ -59,20 +60,22 @@ class _ListWidgeState extends State<ListWidget> {
   }
 
   void scrollToIndex() {
-    if (!_controller.position.hasContentDimensions) return;
     int index = MyAudioHandler().indexNotifier.value;
-    if (index < 5) {
-      _controller.jumpTo(0);
-      return;
-    }
-    if (index > songData.length - 5) {
-      _controller.jumpTo(_controller.position.maxScrollExtent);
-      return;
-    }
-    final double itemHeight =
-        _controller.position.maxScrollExtent / songData.length;
-    final double offset = itemHeight * index - itemHeight * 4;
-    _controller.jumpTo(offset);
+    _controller.jumpTo(index: index, alignment: 0.4);
+    // if (!_controller.position.hasContentDimensions) return;
+    // int index = MyAudioHandler().indexNotifier.value;
+    // if (index < 5) {
+    //   _controller.jumpTo(0);
+    //   return;
+    // }
+    // if (index > songData.length - 5) {
+    //   _controller.jumpTo(_controller.position.maxScrollExtent);
+    //   return;
+    // }
+    // final double itemHeight =
+    //     _controller.position.maxScrollExtent / songData.length;
+    // final double offset = itemHeight * index;
+    // _controller.jumpTo(offset);
   }
 
   // 加载本地json数据
@@ -94,6 +97,7 @@ class _ListWidgeState extends State<ListWidget> {
     return ValueListenableBuilder(
         valueListenable: MyAudioHandler().indexNotifier,
         builder: (context, value, child) {
+          if (songData.isEmpty) return Container();
           return Stack(
             children: [
               Container(
@@ -105,8 +109,9 @@ class _ListWidgeState extends State<ListWidget> {
                   ),
                   margin: const EdgeInsets.only(
                       left: 20, right: 20, bottom: 20, top: 10),
-                  child: ListView.builder(
-                      controller: _controller,
+                  child: ScrollablePositionedList.builder(
+                      // 使用三方库（scrollable_positioned_list）的ScrollablePositionedList，跳到指定位置，ListView的不准
+                      itemScrollController: _controller,
                       itemCount: songData.length,
                       itemBuilder: (context, index) {
                         Song song = songData[index];

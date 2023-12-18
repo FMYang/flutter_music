@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imusic/audio_background.dart';
+import 'package:imusic/lrc_parse.dart';
 // import 'app_bar.dart';
 
 class ListDetail extends StatelessWidget {
@@ -62,6 +63,7 @@ class ListWidget extends StatefulWidget {
 }
 
 class _ListWidgetState extends State<ListWidget> {
+  bool scrolling = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -70,15 +72,20 @@ class _ListWidgetState extends State<ListWidget> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       scrollToIndex(MyAudioHandler().lrcLineNotifier.value, false);
     });
+
+    MyAudioHandler().lrcLineNotifier.addListener(() {
+      int index = MyAudioHandler().lrcLineNotifier.value;
+      scrollToIndex(index, true);
+    });
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     super.dispose();
   }
 
   void scrollToIndex(int index, bool animated) {
+    if (scrolling) return;
     if (!_scrollController.position.hasContentDimensions) return;
     if (index < 5) {
       _scrollController.jumpTo(0);
@@ -103,42 +110,51 @@ class _ListWidgetState extends State<ListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: ValueListenableBuilder(
-          valueListenable: MyAudioHandler().lrcListNotifier,
-          builder: (context, value, child) {
-            return ListView.separated(
-                controller: _scrollController,
-                separatorBuilder: (context, index) => Container(),
-                itemCount: value.length,
-                itemBuilder: (context, index) {
-                  String lrcText = value[index].text;
-                  return ValueListenableBuilder(
-                      valueListenable: MyAudioHandler().lrcLineNotifier,
-                      builder: (context, innerValue, child) {
-                        scrollToIndex(innerValue, true);
-                        return Container(
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: Text(lrcText,
-                                textAlign: TextAlign.center,
-                                style: (innerValue == index)
-                                    ? const TextStyle(
-                                        decoration:
-                                            // 去掉文本下划线
-                                            TextDecoration.none,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.normal,
-                                        color: Colors.white)
-                                    : const TextStyle(
-                                        decoration: TextDecoration.none,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.normal,
-                                        color: Colors.white70)));
-                      });
-                });
-          }),
-    );
+    return NotificationListener(
+        onNotification: (notification) {
+          if (notification is ScrollStartNotification) {
+            scrolling = true;
+          } else if (notification is ScrollEndNotification) {
+            scrolling = false;
+          }
+          return true;
+        },
+        child: Expanded(
+          child: ValueListenableBuilder(
+              valueListenable: MyAudioHandler().lrcListNotifier,
+              builder: (context, value, child) {
+                return ListView.separated(
+                    controller: _scrollController,
+                    separatorBuilder: (context, index) => Container(),
+                    itemCount: value.length,
+                    itemBuilder: (context, index) {
+                      String lrcText = value[index].text;
+                      return ValueListenableBuilder(
+                          valueListenable: MyAudioHandler().lrcLineNotifier,
+                          builder: (context, innerValue, child) {
+                            // scrollToIndex(innerValue, true);
+                            return Container(
+                                height: 50,
+                                alignment: Alignment.center,
+                                child: Text(lrcText,
+                                    textAlign: TextAlign.center,
+                                    style: (innerValue == index)
+                                        ? const TextStyle(
+                                            decoration:
+                                                // 去掉文本下划线
+                                                TextDecoration.none,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.normal,
+                                            color: Colors.white)
+                                        : const TextStyle(
+                                            decoration: TextDecoration.none,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.normal,
+                                            color: Colors.white70)));
+                          });
+                    });
+              }),
+        ));
   }
 }
 
@@ -188,6 +204,34 @@ class _BottomWidget extends State<BottomWidget> {
     int second = (MyAudioHandler().songDuration * value).toInt();
     Duration duration = Duration(seconds: second);
     MyAudioHandler().seek(duration);
+  }
+
+  void setLoopMode() {
+    if (MyAudioHandler().loopMode == MyLoopMode.list) {
+      MyAudioHandler().loopMode = MyLoopMode.one;
+    } else if (MyAudioHandler().loopMode == MyLoopMode.one) {
+      MyAudioHandler().loopMode = MyLoopMode.random;
+    } else {
+      MyAudioHandler().loopMode = MyLoopMode.list;
+    }
+    MyAudioHandler().loopModeNotifier.value = MyAudioHandler().loopMode;
+    MyAudioHandler().setLoopMode(MyAudioHandler().loopMode);
+    MyAudioHandler().savePlayMode(MyAudioHandler().loopMode);
+  }
+
+  String modeImageName(MyLoopMode value) {
+    switch (value) {
+      case MyLoopMode.list:
+        return 'assets/images/svg_kg_common_ic_player_mode_all_default@3x.png';
+      case MyLoopMode.one:
+        return 'assets/images/svg_kg_common_ic_player_mode_single_default@3x.png';
+      case MyLoopMode.random:
+        return 'assets/images/svg_kg_common_ic_player_mode_random_default@3x.png';
+    }
+  }
+
+  void _clockModeChanged() {
+    MyAudioHandler().clockModeChanged();
   }
 
   @override
@@ -246,12 +290,16 @@ class _BottomWidget extends State<BottomWidget> {
           const SizedBox(height: 10),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             IconButton(
-                onPressed: () => MyAudioHandler().skipToPrevious(),
-                icon: Image.asset(
-                  'assets/images/svg_kg_common_ic_player_mode_all_default@3x.png',
-                  width: 25,
-                  height: 25,
-                )),
+                onPressed: () => setLoopMode(),
+                icon: ValueListenableBuilder(
+                    valueListenable: MyAudioHandler().loopModeNotifier,
+                    builder: (context, value, child) {
+                      return Image.asset(
+                        modeImageName(value),
+                        width: 25,
+                        height: 25,
+                      );
+                    })),
             const SizedBox(width: 20),
             IconButton(
                 onPressed: () => MyAudioHandler().skipToPrevious(),
@@ -295,13 +343,31 @@ class _BottomWidget extends State<BottomWidget> {
                   height: 25,
                 )),
             const SizedBox(width: 20),
-            IconButton(
-                onPressed: () => MyAudioHandler().skipToNext(),
-                icon: Image.asset(
-                  'assets/images/kg_ic_player_menu_music_clock_normal@3x.png',
-                  width: 25,
-                  height: 25,
-                )),
+            ValueListenableBuilder(
+                valueListenable: MyAudioHandler().clockModeNotifer,
+                builder: (context, value, child) {
+                  if (value == MyClockMode.off) {
+                    return IconButton(
+                        onPressed: () => _clockModeChanged(),
+                        icon: Image.asset(
+                          'assets/images/kg_ic_player_menu_music_clock_normal@3x.png',
+                          width: 25,
+                          height: 25,
+                        ));
+                  } else {
+                    return GestureDetector(
+                        onTap: () => _clockModeChanged(),
+                        child: ValueListenableBuilder(
+                            valueListenable: MyAudioHandler().timerNotifer,
+                            builder: ((context, value, child) {
+                              return Text(
+                                  LRCParse.formatDuration(value.toDouble()),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.white));
+                            })));
+                  }
+                }),
           ])
         ]));
   }
