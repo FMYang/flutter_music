@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:imusic/app_bar.dart';
 import 'package:imusic/audio_background.dart';
 import 'package:imusic/custom_list_tile.dart';
 import 'package:imusic/lrc_page.dart';
 import 'package:imusic/play_info_page.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:imusic/song.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -30,7 +27,10 @@ class _MusicAppState extends State<MusicApp>
   // 通过引用子部件的全局键来实现从父部件触发调用子部件方法
   final GlobalKey<_ListWidgeState> _childKey = GlobalKey<_ListWidgeState>();
 
-  // final List<String> sourceList = ['top500', '许嵩'];
+  final List<String> sourceList = ['top500', '许嵩'];
+
+  // 选中源的下标
+  int curSourceIndex = 0;
 
   bool _isMenuOpen = false;
   late AnimationController _animatedController;
@@ -73,6 +73,18 @@ class _MusicAppState extends State<MusicApp>
     }
   }
 
+  // 切换源
+  void sourceItemTap(int index) {
+    setState(() {
+      curSourceIndex = index;
+    });
+    _toggleMenu();
+    String sourceFileName = sourceList[curSourceIndex];
+    _childKey.currentState?.loadJsonFile(sourceFileName);
+    MyAudioHandler().pause;
+    MyAudioHandler().loadPlayList(sourceFileName);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -101,8 +113,8 @@ class _MusicAppState extends State<MusicApp>
                     width: 100,
                     height: 40,
                     color: Colors.transparent,
-                    child: const Text('top500',
-                        style: TextStyle(
+                    child: Text(sourceList[curSourceIndex],
+                        style: const TextStyle(
                             decoration: TextDecoration.none,
                             fontSize: 16,
                             fontWeight: FontWeight.normal,
@@ -143,16 +155,21 @@ class _MusicAppState extends State<MusicApp>
                   padding: const EdgeInsets.only(
                       left: 5, top: 40, bottom: 40, right: 5),
                   child: ListView.builder(
-                      itemCount: 10,
+                      itemCount: sourceList.length,
                       itemBuilder: (context, index) {
-                        return const SizedBox(
-                            height: 50,
-                            child: Text('top500',
-                                style: TextStyle(
-                                    decoration: TextDecoration.none,
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.normal)));
+                        return GestureDetector(
+                            onTap: () => sourceItemTap(index),
+                            child: SizedBox(
+                                height: 50,
+                                child: Text(sourceList[index],
+                                    style: TextStyle(
+                                        decoration: TextDecoration.none,
+                                        fontSize: 18,
+                                        color: (curSourceIndex == index)
+                                            ? const Color.fromARGB(
+                                                255, 26, 174, 244)
+                                            : Colors.black,
+                                        fontWeight: FontWeight.normal))));
                       }),
                 ))),
       ]),
@@ -175,7 +192,7 @@ class _ListWidgeState extends State<ListWidget> {
   @override
   void initState() {
     super.initState();
-    loadJsonFile();
+    loadJsonFile('top500');
 
     MyAudioHandler().indexNotifier.addListener(() {
       scrollToIndex();
@@ -192,8 +209,8 @@ class _ListWidgeState extends State<ListWidget> {
   }
 
   // 加载本地json数据
-  Future<void> loadJsonFile() async {
-    List<Song> data = await MyAudioHandler().loadJsonData('top500');
+  Future<void> loadJsonFile(String jsonFileName) async {
+    List<Song> data = await MyAudioHandler().loadJsonData(jsonFileName);
     setState(() {
       songData = data;
     });

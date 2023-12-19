@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 class LRCLine {
   final Duration time;
   final String text;

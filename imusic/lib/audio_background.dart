@@ -69,7 +69,6 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   // 播放模式
   MyLoopMode loopMode = MyLoopMode.list;
 
-  ValueNotifier<int> scrollToTopNotifier = ValueNotifier(0);
   // 监听播放的下标
   ValueNotifier<int> indexNotifier = ValueNotifier(0);
   // 监听是否播放中
@@ -97,7 +96,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   // 单例
   MyAudioHandler._internal() {
     Future.delayed(Duration.zero, () async {
-      await loadPlayList();
+      await loadPlayList('top500');
       _notifyAudioHandlerAboutPlaybackEvents();
       _listenToPlaybackState();
       _listenForCurrentSongIndexChanges();
@@ -113,9 +112,10 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   // 单例实例
   static final MyAudioHandler _instance = MyAudioHandler._internal();
 
-  // 加载本地json数据
-  Future<void> loadPlayList() async {
-    songData = await loadJsonData('top500');
+  // 加载播放列表
+  Future<void> loadPlayList(String jsonFileName) async {
+    _playList.clear();
+    songData = await loadJsonData(jsonFileName);
     List<MediaItem> mediaItems = songData.map((e) => e.toMediaItem()).toList();
     List<AudioSource> sources = mediaItems
         .map((e) => AudioSource.asset('assets/audio/${e.title}.mp3', tag: e))
@@ -124,10 +124,12 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     _player.setAudioSource(_playList);
 
     // notify system
+    queue.value.clear();
     final newQueue = queue.value..addAll(mediaItems);
     queue.add(newQueue);
   }
 
+  // 加载本地json数据
   Future<List<Song>> loadJsonData(String jsonFileName) async {
     String jsonString =
         await rootBundle.loadString('assets/jsons/$jsonFileName.json');
@@ -137,6 +139,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     return data;
   }
 
+  // 过滤数据
   Future<List<Song>> filterSongData(List<Song> songData) async {
     List<Song> filteredList = [];
     for (Song song in songData) {
@@ -150,6 +153,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     return filteredList;
   }
 
+  // 判断资源文件是否存在
   Future<bool> fileExist(String path) async {
     try {
       await rootBundle.load(path);
@@ -221,12 +225,12 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
         index = _player.shuffleIndices!.indexOf(index);
       }
       indexNotifier.value = index;
-      mediaItem.add(playlist[index]);
       Song song = songData[index];
       songDuration = song.timelength ~/ 1000;
       durationNotifier.value = LRCParse.formatDuration(song.timelength / 1000);
       lrclist = await LRCParse.parse(song.lrc);
       lrcListNotifier.value = lrclist;
+      mediaItem.add(playlist[index]);
     });
   }
 
@@ -250,6 +254,20 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       if (playTime >= (songDuration - 1)) {
         skipToNext();
       }
+
+      // 控制台显示歌词信息
+      String lrcText = lrclist[index].text;
+      Song song = songData[indexNotifier.value];
+      MediaItem item = MediaItem(
+          id: song.albumId,
+          album: song.songName,
+          artist: '${song.authorName} - ${song.songName}',
+          title: lrcText,
+          duration: Duration(
+              minutes: (((song.timelength / 1000.0) / 60 % 60).toInt()),
+              seconds: (((song.timelength / 1000.0) % 60).toInt())),
+          artUri: Uri.parse(song.icon));
+      mediaItem.add(item);
     });
   }
 
