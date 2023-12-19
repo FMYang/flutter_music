@@ -30,6 +30,8 @@ class _MusicAppState extends State<MusicApp>
   // 通过引用子部件的全局键来实现从父部件触发调用子部件方法
   final GlobalKey<_ListWidgeState> _childKey = GlobalKey<_ListWidgeState>();
 
+  // final List<String> sourceList = ['top500', '许嵩'];
+
   bool _isMenuOpen = false;
   late AnimationController _animatedController;
   late Animation<Offset> _sliderAnimation;
@@ -119,35 +121,40 @@ class _MusicAppState extends State<MusicApp>
             onTap: onStatusBarTap,
           ),
         ),
-        AnimatedOpacity(
-            opacity: _isMenuOpen ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 100),
-            child: GestureDetector(
-                onTap: () {
-                  _toggleMenu();
-                },
-                child: Container(color: Colors.black45))),
-        SlideTransition(
-            position: _sliderAnimation,
-            child: Container(
-              width: 200,
-              height: double.infinity,
-              color: Colors.white,
-              padding:
-                  const EdgeInsets.only(left: 5, top: 40, bottom: 40, right: 5),
-              child: ListView.builder(
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return const SizedBox(
-                        height: 50,
-                        child: Text('top500',
-                            style: TextStyle(
-                                decoration: TextDecoration.none,
-                                fontSize: 18,
-                                color: Colors.black,
-                                fontWeight: FontWeight.normal)));
-                  }),
-            ))
+        Visibility(
+          visible: _isMenuOpen,
+          child: AnimatedOpacity(
+              opacity: _isMenuOpen ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 100),
+              child: GestureDetector(
+                  onTap: () {
+                    _toggleMenu();
+                  },
+                  child: Container(color: Colors.black45))),
+        ),
+        Visibility(
+            visible: _isMenuOpen,
+            child: SlideTransition(
+                position: _sliderAnimation,
+                child: Container(
+                  width: 200,
+                  height: double.infinity,
+                  color: Colors.white,
+                  padding: const EdgeInsets.only(
+                      left: 5, top: 40, bottom: 40, right: 5),
+                  child: ListView.builder(
+                      itemCount: 10,
+                      itemBuilder: (context, index) {
+                        return const SizedBox(
+                            height: 50,
+                            child: Text('top500',
+                                style: TextStyle(
+                                    decoration: TextDecoration.none,
+                                    fontSize: 18,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.normal)));
+                      }),
+                ))),
       ]),
     );
   }
@@ -186,10 +193,9 @@ class _ListWidgeState extends State<ListWidget> {
 
   // 加载本地json数据
   Future<void> loadJsonFile() async {
-    String jsonString = await rootBundle.loadString('assets/jsons/top500.json');
-    final List<dynamic> jsonData = json.decode(jsonString);
+    List<Song> data = await MyAudioHandler().loadJsonData('top500');
     setState(() {
-      songData = jsonData.map((item) => Song.fromJson(item)).toList();
+      songData = data;
     });
   }
 

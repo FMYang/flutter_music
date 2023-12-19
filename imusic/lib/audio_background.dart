@@ -115,9 +115,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   // 加载本地json数据
   Future<void> loadPlayList() async {
-    String jsonString = await rootBundle.loadString('assets/jsons/top500.json');
-    final List<dynamic> jsonData = json.decode(jsonString);
-    songData = jsonData.map((item) => Song.fromJson(item)).toList();
+    songData = await loadJsonData('top500');
     List<MediaItem> mediaItems = songData.map((e) => e.toMediaItem()).toList();
     List<AudioSource> sources = mediaItems
         .map((e) => AudioSource.asset('assets/audio/${e.title}.mp3', tag: e))
@@ -128,6 +126,37 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     // notify system
     final newQueue = queue.value..addAll(mediaItems);
     queue.add(newQueue);
+  }
+
+  Future<List<Song>> loadJsonData(String jsonFileName) async {
+    String jsonString =
+        await rootBundle.loadString('assets/jsons/$jsonFileName.json');
+    final List<dynamic> jsonData = json.decode(jsonString);
+    List<Song> data = jsonData.map((item) => Song.fromJson(item)).toList();
+    data = await filterSongData(data);
+    return data;
+  }
+
+  Future<List<Song>> filterSongData(List<Song> songData) async {
+    List<Song> filteredList = [];
+    for (Song song in songData) {
+      String fileName = song.songName;
+      String path = 'assets/audio/$fileName.mp3';
+      bool exist = await fileExist(path);
+      if (exist) {
+        filteredList.add(song);
+      }
+    }
+    return filteredList;
+  }
+
+  Future<bool> fileExist(String path) async {
+    try {
+      await rootBundle.load(path);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   // 监听播放事件
@@ -371,7 +400,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     }
   }
 
-  // 倒计时定时器
+  // 倒计时退出
   void startTimer() {
     timerNotifer.value = clockModeNotifer.value.seconds();
     timer?.cancel();
