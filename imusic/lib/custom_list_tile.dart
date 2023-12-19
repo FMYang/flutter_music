@@ -35,13 +35,15 @@ class CustomListTile extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),
                       child: CachedNetworkImage(
-                          width: 54,
-                          height: 54,
+                          // width: 54,
+                          // height: 54,
                           imageUrl: img,
                           placeholder: (context, url) {
                             return Image.asset(
                                 'assets/images/svg_kg_playpage__album_default_01@3x.png');
-                          }),
+                          },
+                          fadeInDuration: const Duration(milliseconds: 200),
+                          fadeOutDuration: const Duration(milliseconds: 200)),
                     )),
                 const SizedBox(width: 10.0),
                 Expanded(

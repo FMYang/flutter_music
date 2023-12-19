@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:imusic/app_bar.dart';
 import 'package:imusic/audio_background.dart';
 import 'package:imusic/custom_list_tile.dart';
-import 'package:imusic/list_detail.dart';
-import 'package:imusic/play_info.dart';
+import 'package:imusic/lrc_page.dart';
+import 'package:imusic/play_info_page.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:imusic/song.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -18,8 +18,58 @@ void main() async {
 }
 
 // 2.列表组件
-class MusicApp extends StatelessWidget {
+class MusicApp extends StatefulWidget {
   const MusicApp({Key? key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _MusicAppState();
+}
+
+class _MusicAppState extends State<MusicApp>
+    with SingleTickerProviderStateMixin {
+  // 通过引用子部件的全局键来实现从父部件触发调用子部件方法
+  final GlobalKey<_ListWidgeState> _childKey = GlobalKey<_ListWidgeState>();
+
+  bool _isMenuOpen = false;
+  late AnimationController _animatedController;
+  late Animation<Offset> _sliderAnimation;
+
+  void onStatusBarTap() {
+    _childKey.currentState?.scrollToTop();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animatedController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 200));
+
+    _sliderAnimation = Tween<Offset>(
+            begin: Offset(_isMenuOpen ? 0.0 : -1.0, 0.0),
+            end: Offset(_isMenuOpen ? -1.0 : 0.0, 0.0))
+        .animate(CurvedAnimation(
+      parent: _animatedController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animatedController.dispose();
+    super.dispose();
+  }
+
+  void _toggleMenu() {
+    setState(() {
+      _isMenuOpen = !_isMenuOpen;
+    });
+    if (_isMenuOpen) {
+      _animatedController.forward();
+    } else {
+      _animatedController.reverse();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +79,81 @@ class MusicApp extends StatelessWidget {
         colorScheme: const ColorScheme.light(primary: Colors.white),
         // useMaterial3: true,
       ),
-      home: const Scaffold(
-        backgroundColor: Colors.white,
-        appBar: SharedAppBar(titleText: "Music"),
-        body: ListWidget(),
-      ),
+      home: Stack(children: [
+        Scaffold(
+          backgroundColor: Colors.white,
+          appBar: const SharedAppBar(
+            titleText: "Music",
+          ),
+          body: ListWidget(key: _childKey),
+        ),
+        Positioned(
+            top: kToolbarHeight + 10,
+            height: 40,
+            child: Row(children: [
+              const SizedBox(width: 25),
+              GestureDetector(
+                onTap: () => _toggleMenu(),
+                child: Container(
+                    alignment: Alignment.centerLeft,
+                    width: 100,
+                    height: 40,
+                    color: Colors.transparent,
+                    child: const Text('top500',
+                        style: TextStyle(
+                            decoration: TextDecoration.none,
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                            color: Colors.black))),
+              ),
+            ])),
+        // Status bar tap override
+        // listview添加controll后，scrollToTop失效（ios，macos），这里添加自定义事件自己实现
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: MediaQuery.of(context).padding.top,
+          child: GestureDetector(
+            excludeFromSemantics: true,
+            onTap: onStatusBarTap,
+          ),
+        ),
+        AnimatedOpacity(
+            opacity: _isMenuOpen ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 100),
+            child: GestureDetector(
+                onTap: () {
+                  _toggleMenu();
+                },
+                child: Container(color: Colors.black45))),
+        SlideTransition(
+            position: _sliderAnimation,
+            child: Container(
+              width: 200,
+              height: double.infinity,
+              color: Colors.white,
+              padding:
+                  const EdgeInsets.only(left: 5, top: 40, bottom: 40, right: 5),
+              child: ListView.builder(
+                  itemCount: 10,
+                  itemBuilder: (context, index) {
+                    return const SizedBox(
+                        height: 50,
+                        child: Text('top500',
+                            style: TextStyle(
+                                decoration: TextDecoration.none,
+                                fontSize: 18,
+                                color: Colors.black,
+                                fontWeight: FontWeight.normal)));
+                  }),
+            ))
+      ]),
     );
   }
 }
 
+//
 class ListWidget extends StatefulWidget {
   const ListWidget({Key? key}) : super(key: key);
 
@@ -59,23 +175,13 @@ class _ListWidgeState extends State<ListWidget> {
     });
   }
 
+  void scrollToTop() {
+    _controller.scrollTo(index: 0, duration: const Duration(milliseconds: 250));
+  }
+
   void scrollToIndex() {
     int index = MyAudioHandler().indexNotifier.value;
     _controller.jumpTo(index: index, alignment: 0.4);
-    // if (!_controller.position.hasContentDimensions) return;
-    // int index = MyAudioHandler().indexNotifier.value;
-    // if (index < 5) {
-    //   _controller.jumpTo(0);
-    //   return;
-    // }
-    // if (index > songData.length - 5) {
-    //   _controller.jumpTo(_controller.position.maxScrollExtent);
-    //   return;
-    // }
-    // final double itemHeight =
-    //     _controller.position.maxScrollExtent / songData.length;
-    // final double offset = itemHeight * index;
-    // _controller.jumpTo(offset);
   }
 
   // 加载本地json数据

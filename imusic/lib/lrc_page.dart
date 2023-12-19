@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:imusic/audio_background.dart';
 import 'package:imusic/lrc_parse.dart';
 // import 'app_bar.dart';
@@ -25,6 +26,9 @@ class _ContentWidgetState extends State<ContentWidget> {
   @override
   void initState() {
     super.initState();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+    });
   }
 
   @override
@@ -360,11 +364,16 @@ class _BottomWidget extends State<BottomWidget> {
                         child: ValueListenableBuilder(
                             valueListenable: MyAudioHandler().timerNotifer,
                             builder: ((context, value, child) {
-                              return Text(
-                                  LRCParse.formatDuration(value.toDouble()),
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      fontSize: 16, color: Colors.white));
+                              return SizedBox(
+                                  height: 54,
+                                  child: Center(
+                                      child: Text(
+                                          LRCParse.formatDuration(
+                                              value.toDouble()),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.white))));
                             })));
                   }
                 }),

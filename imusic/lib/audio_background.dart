@@ -69,6 +69,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   // 播放模式
   MyLoopMode loopMode = MyLoopMode.list;
 
+  ValueNotifier<int> scrollToTopNotifier = ValueNotifier(0);
   // 监听播放的下标
   ValueNotifier<int> indexNotifier = ValueNotifier(0);
   // 监听是否播放中
@@ -372,6 +373,7 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   // 倒计时定时器
   void startTimer() {
+    timerNotifer.value = clockModeNotifer.value.seconds();
     timer?.cancel();
     timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
       clockTime -= 1;
