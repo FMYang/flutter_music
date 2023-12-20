@@ -27,7 +27,22 @@ class _MusicAppState extends State<MusicApp>
   // 通过引用子部件的全局键来实现从父部件触发调用子部件方法
   final GlobalKey<_ListWidgeState> _childKey = GlobalKey<_ListWidgeState>();
 
-  final List<String> sourceList = ['top500', '许嵩'];
+  final List<String> sourceList = [
+    'top500',
+    '抖音热歌榜',
+    '快手热歌榜',
+    '00后热歌榜',
+    '90后热歌榜',
+    '80后热歌榜',
+    '我喜欢的',
+    'mp3',
+    'xp中文歌单',
+    '热门歌手代表作',
+    '周杰伦',
+    '王力宏',
+    '许嵩',
+    'BEYOND',
+  ];
 
   // 选中源的下标
   int curSourceIndex = 0;
@@ -96,33 +111,28 @@ class _MusicAppState extends State<MusicApp>
       home: Stack(children: [
         Scaffold(
           backgroundColor: Colors.white,
-          appBar: const SharedAppBar(
+          appBar: SharedAppBar(
             titleText: "Music",
-          ),
-          body: ListWidget(key: _childKey),
-        ),
-        Positioned(
-            top: kToolbarHeight + 10,
-            height: 40,
-            child: Row(children: [
+            leading: Row(children: [
               const SizedBox(width: 25),
               GestureDetector(
                 onTap: () => _toggleMenu(),
                 child: Container(
                     alignment: Alignment.centerLeft,
-                    width: 100,
+                    width: 120,
                     height: 40,
                     color: Colors.transparent,
                     child: Text(sourceList[curSourceIndex],
                         style: const TextStyle(
                             decoration: TextDecoration.none,
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.normal,
                             color: Colors.black))),
               ),
-            ])),
-        // Status bar tap override
-        // listview添加controll后，scrollToTop失效（ios，macos），这里添加自定义事件自己实现
+            ]),
+          ),
+          body: ListWidget(key: _childKey),
+        ),
         Positioned(
           top: 0,
           left: 0,
@@ -153,7 +163,7 @@ class _MusicAppState extends State<MusicApp>
                   height: double.infinity,
                   color: Colors.white,
                   padding: const EdgeInsets.only(
-                      left: 5, top: 40, bottom: 40, right: 5),
+                      left: 15, top: 40, bottom: 40, right: 5),
                   child: ListView.builder(
                       itemCount: sourceList.length,
                       itemBuilder: (context, index) {
@@ -197,6 +207,14 @@ class _ListWidgeState extends State<ListWidget> {
     MyAudioHandler().indexNotifier.addListener(() {
       scrollToIndex();
     });
+  }
+
+  @override
+  void dispose() {
+    MyAudioHandler().indexNotifier.removeListener(() {
+      scrollToIndex();
+    });
+    super.dispose();
   }
 
   void scrollToTop() {

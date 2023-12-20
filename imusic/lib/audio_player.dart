@@ -59,7 +59,7 @@
 
 //   Future<void> playOrPause() async {
 //     if (playingNotifier.value) {
-//       pause();
+//       pause()
 //     } else {
 //       play();
 //     }

@@ -17,6 +17,7 @@ class SharedAppBar extends StatelessWidget implements PreferredSizeWidget {
         style: const TextStyle(color: Colors.black),
       ),
       leading: leading,
+      leadingWidth: 150,
       centerTitle: true,
       // backgroundColor: Colors.white,
       elevation: 0,

@@ -51,7 +51,7 @@ extension MyClockModeExtesion on MyClockMode {
       case MyClockMode.time30:
         return 30 * 60;
       case MyClockMode.time60:
-        return 60 * 60;
+        return 59 * 60 + 59;
     }
   }
 }
@@ -89,8 +89,11 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   int songDuration = 0;
   // 定时关闭
   ValueNotifier<MyClockMode> clockModeNotifer = ValueNotifier(MyClockMode.off);
+  // 计时
   int clockTime = 0;
+  // 倒计时的值
   ValueNotifier<int> timerNotifer = ValueNotifier(0);
+  // 定时器
   Timer? timer;
 
   // 单例
@@ -127,6 +130,9 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     queue.value.clear();
     final newQueue = queue.value..addAll(mediaItems);
     queue.add(newQueue);
+
+    // 资源reload的之后更新下标
+    indexDidChanged(0);
   }
 
   // 加载本地json数据
@@ -219,19 +225,24 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   // 监听播放歌曲下标
   void _listenForCurrentSongIndexChanges() {
     _player.currentIndexStream.listen((index) async {
-      final playlist = queue.value;
-      if (index == null || playlist.isEmpty) return;
-      if (_player.shuffleModeEnabled) {
-        index = _player.shuffleIndices!.indexOf(index);
-      }
-      indexNotifier.value = index;
-      Song song = songData[index];
-      songDuration = song.timelength ~/ 1000;
-      durationNotifier.value = LRCParse.formatDuration(song.timelength / 1000);
-      lrclist = await LRCParse.parse(song.lrc);
-      lrcListNotifier.value = lrclist;
-      mediaItem.add(playlist[index]);
+      indexDidChanged(index ?? 0);
     });
+  }
+
+  void indexDidChanged(int index) async {
+    final playlist = queue.value;
+    if (playlist.isEmpty) return;
+    if (index > playlist.length - 1) return;
+    if (_player.shuffleModeEnabled) {
+      index = _player.shuffleIndices!.indexOf(index);
+    }
+    indexNotifier.value = index;
+    Song song = songData[index];
+    songDuration = song.timelength ~/ 1000;
+    durationNotifier.value = LRCParse.formatDuration(song.timelength / 1000);
+    lrclist = await LRCParse.parse(song.lrc);
+    lrcListNotifier.value = lrclist;
+    mediaItem.add(playlist[index]);
   }
 
   // 监听时间
@@ -239,6 +250,11 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     _player.positionStream.listen((position) {
       if (lrclist.isEmpty) return;
       int index = findCurPlayLrcIndex(position.inSeconds);
+
+      if (lrcLineNotifier.value != index) {
+        updateDisplayMediaItem(index);
+      }
+
       if (lrcLineNotifier.value != index) {
         lrcLineNotifier.value = index;
       }
@@ -254,24 +270,27 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       if (playTime >= (songDuration - 1)) {
         skipToNext();
       }
-
-      // 控制台显示歌词信息
-      String lrcText = lrclist[index].text;
-      Song song = songData[indexNotifier.value];
-      MediaItem item = MediaItem(
-          id: song.albumId,
-          album: song.songName,
-          artist: '${song.authorName} - ${song.songName}',
-          title: lrcText,
-          duration: Duration(
-              minutes: (((song.timelength / 1000.0) / 60 % 60).toInt()),
-              seconds: (((song.timelength / 1000.0) % 60).toInt())),
-          artUri: Uri.parse(song.icon));
-      mediaItem.add(item);
     });
   }
 
+  // 控制台显示歌词信息
+  void updateDisplayMediaItem(int index) {
+    String lrcText = lrclist[index].text;
+    Song song = songData[indexNotifier.value];
+    MediaItem item = MediaItem(
+        id: song.albumId,
+        album: song.songName,
+        artist: '${song.authorName} - ${song.songName}',
+        title: lrcText,
+        duration: Duration(
+            minutes: (((song.timelength / 1000.0) / 60 % 60).toInt()),
+            seconds: (((song.timelength / 1000.0) % 60).toInt())),
+        artUri: Uri.parse(song.icon));
+    mediaItem.add(item);
+  }
+
   // 自动播放事件（调用skipToNext报错）
+  // 随机播放这里实现不了，就放在duration还剩1s的时候播放一下一曲实现随机播放吧
   // void _listenPositionContinueChanges() {
   //   _player.positionDiscontinuityStream.listen((event) {
   //     print('auto play ${event.reason}');
@@ -360,7 +379,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
 
   // 随机值
   int randomValue() {
-    final random = Random();
+    // 伪随机数，可能产生相同的随机序列，待优化
+    var random = Random();
     int index = random.nextInt(songData.length);
     return index;
   }

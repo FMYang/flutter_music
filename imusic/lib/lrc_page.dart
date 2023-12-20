@@ -85,11 +85,16 @@ class _ListWidgetState extends State<ListWidget> {
 
   @override
   void dispose() {
+    MyAudioHandler().lrcLineNotifier.removeListener(() {
+      int index = MyAudioHandler().lrcLineNotifier.value;
+      scrollToIndex(index, true);
+    });
     super.dispose();
   }
 
   void scrollToIndex(int index, bool animated) {
     if (scrolling) return;
+    if (!_scrollController.hasClients) return;
     if (!_scrollController.position.hasContentDimensions) return;
     if (index < 5) {
       _scrollController.jumpTo(0);
@@ -120,6 +125,7 @@ class _ListWidgetState extends State<ListWidget> {
             scrolling = true;
           } else if (notification is ScrollEndNotification) {
             scrolling = false;
+            scrollToIndex(MyAudioHandler().lrcLineNotifier.value, false);
           }
           return true;
         },
@@ -249,8 +255,10 @@ class _BottomWidget extends State<BottomWidget> {
             ValueListenableBuilder(
                 valueListenable: MyAudioHandler().playTimeNotifier,
                 builder: (context, value, child) {
-                  return Text(value,
-                      style: const TextStyle(color: Colors.white70));
+                  return SizedBox(
+                      width: 40,
+                      child: Text(value,
+                          style: const TextStyle(color: Colors.white70)));
                 }),
             const SizedBox(width: 0),
             Expanded(
@@ -286,8 +294,10 @@ class _BottomWidget extends State<BottomWidget> {
             ValueListenableBuilder(
                 valueListenable: MyAudioHandler().durationNotifier,
                 builder: (context, value, child) {
-                  return Text(value,
-                      style: const TextStyle(color: Colors.white70));
+                  return SizedBox(
+                      width: 40,
+                      child: Text(value,
+                          style: const TextStyle(color: Colors.white70)));
                 }),
             const SizedBox(width: 30),
           ]),

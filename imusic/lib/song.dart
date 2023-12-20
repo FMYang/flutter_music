@@ -18,9 +18,9 @@ class Song {
 
   factory Song.fromJson(Map<String, dynamic> json) {
     return Song(
-        albumId: json['album_id'],
-        songName: json['song_name'],
-        authorName: json['author_name'],
+        albumId: json['album_id'].toString(),
+        songName: json['song_name'].toString(),
+        authorName: json['author_name'].toString(),
         icon: json['img'],
         timelength: json['timelength'],
         lrc: json['lrc']);
