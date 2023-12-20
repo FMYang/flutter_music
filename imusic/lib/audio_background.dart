@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imusic/lrc_parse.dart';
@@ -103,7 +104,8 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
       _notifyAudioHandlerAboutPlaybackEvents();
       _listenToPlaybackState();
       _listenForCurrentSongIndexChanges();
-      _listenForDurationChanges();
+      // _listenForDurationChanges();
+      _listenForPositionChanges();
 
       setLoopMode(await loadPlayMode());
     });
@@ -245,15 +247,32 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     mediaItem.add(playlist[index]);
   }
 
-  // 监听时间
-  void _listenForDurationChanges() {
+  // 监听资源时长
+  // void _listenForDurationChanges() {
+  //   _player.durationStream.listen((duration) {
+  //     var index = _player.currentIndex;
+  //     final newQueue = queue.value;
+  //     if (index == null || newQueue.isEmpty) return;
+  //     if (_player.shuffleModeEnabled) {
+  //       index = _player.shuffleIndices!.indexOf(index);
+  //     }
+  //     final oldMediaItem = newQueue[index];
+  //     final newMediaItem = oldMediaItem.copyWith(duration: duration);
+  //     newQueue[index] = newMediaItem;
+  //     queue.add(newQueue);
+  //     mediaItem.add(newMediaItem);
+  //   });
+  // }
+
+  // 监听进度
+  void _listenForPositionChanges() {
     _player.positionStream.listen((position) {
       if (lrclist.isEmpty) return;
       int index = findCurPlayLrcIndex(position.inSeconds);
 
-      if (lrcLineNotifier.value != index) {
-        updateDisplayMediaItem(index);
-      }
+      // if (lrcLineNotifier.value != index) {
+      //   updateDisplayMediaItem(index);
+      // }
 
       if (lrcLineNotifier.value != index) {
         lrcLineNotifier.value = index;
@@ -274,20 +293,16 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   }
 
   // 控制台显示歌词信息
-  void updateDisplayMediaItem(int index) {
-    String lrcText = lrclist[index].text;
-    Song song = songData[indexNotifier.value];
-    MediaItem item = MediaItem(
-        id: song.albumId,
-        album: song.songName,
-        artist: '${song.authorName} - ${song.songName}',
-        title: lrcText,
-        duration: Duration(
-            minutes: (((song.timelength / 1000.0) / 60 % 60).toInt()),
-            seconds: (((song.timelength / 1000.0) % 60).toInt())),
-        artUri: Uri.parse(song.icon));
-    mediaItem.add(item);
-  }
+  // 会导致进度条紊乱，先不支持
+  // void updateDisplayMediaItem(int index) {
+  //   String lrcText = lrclist[index].text;
+  //   int itemIndex = indexNotifier.value;
+  //   Song song = songData[itemIndex];
+  //   final newQueue = queue.value;
+  //   final oldMediaItem = newQueue[itemIndex];
+  //   MediaItem newMediaItem = oldMediaItem.copyWith(title: lrcText);
+  //   mediaItem.add(newMediaItem);
+  // }
 
   // 自动播放事件（调用skipToNext报错）
   // 随机播放这里实现不了，就放在duration还剩1s的时候播放一下一曲实现随机播放吧

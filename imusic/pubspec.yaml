@@ -40,7 +40,7 @@ dependencies:
   just_audio: ^0.9.31
   audio_service: ^0.18.9
 
-  cached_network_image: ^3.0.0
+  cached_network_image: ^3.0.0 # ANDROID IOS MACOS
 
   scrollable_positioned_list: ^0.3.8 
 

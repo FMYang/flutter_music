@@ -37,11 +37,13 @@ class _MusicAppState extends State<MusicApp>
     '我喜欢的',
     'mp3',
     'xp中文歌单',
-    '热门歌手代表作',
+    'xp英文歌单',
+    // '热门歌手代表作',
     '周杰伦',
     '王力宏',
     '许嵩',
     'BEYOND',
+    '001英文歌单'
   ];
 
   // 选中源的下标

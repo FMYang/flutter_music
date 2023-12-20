@@ -125,7 +125,6 @@ class _ListWidgetState extends State<ListWidget> {
             scrolling = true;
           } else if (notification is ScrollEndNotification) {
             scrolling = false;
-            scrollToIndex(MyAudioHandler().lrcLineNotifier.value, false);
           }
           return true;
         },
@@ -134,6 +133,7 @@ class _ListWidgetState extends State<ListWidget> {
               valueListenable: MyAudioHandler().lrcListNotifier,
               builder: (context, value, child) {
                 return ListView.separated(
+                    padding: const EdgeInsets.only(left: 40, right: 40),
                     controller: _scrollController,
                     separatorBuilder: (context, index) => Container(),
                     itemCount: value.length,

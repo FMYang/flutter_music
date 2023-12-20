@@ -35,8 +35,8 @@ class CustomListTile extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),
                       child: CachedNetworkImage(
-                          // width: 54,
-                          // height: 54,
+                          memCacheWidth: 100,
+                          memCacheHeight: 100,
                           imageUrl: img,
                           placeholder: (context, url) {
                             return Image.asset(
