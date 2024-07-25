@@ -260,13 +260,14 @@ class _BottomWidget extends State<BottomWidget> {
                       child: Text(value,
                           style: const TextStyle(color: Colors.white70)));
                 }),
-            const SizedBox(width: 0),
+            const SizedBox(width: 2),
             Expanded(
               child: SizedBox(
-                width: 230,
+                // width: 230,
                 height: 30,
                 child: SliderTheme(
                   data: SliderThemeData(
+                      inactiveTrackColor: Colors.white10,
                       trackHeight: 2,
                       trackShape: const CustomSliderTrackShape(),
                       thumbShape: CustomSliderThumbShape(
@@ -290,7 +291,7 @@ class _BottomWidget extends State<BottomWidget> {
                 // }),
               ),
             ),
-            const SizedBox(width: 0),
+            const SizedBox(width: 2),
             ValueListenableBuilder(
                 valueListenable: MyAudioHandler().durationNotifier,
                 builder: (context, value, child) {
@@ -301,7 +302,7 @@ class _BottomWidget extends State<BottomWidget> {
                 }),
             const SizedBox(width: 30),
           ]),
-          const SizedBox(height: 10),
+          const SizedBox(height: 2),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             IconButton(
                 onPressed: () => setLoopMode(),
