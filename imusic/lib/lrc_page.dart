@@ -256,7 +256,7 @@ class _BottomWidget extends State<BottomWidget> {
                 valueListenable: MyAudioHandler().playTimeNotifier,
                 builder: (context, value, child) {
                   return SizedBox(
-                      width: 40,
+                      width: 50,
                       child: Text(value,
                           style: const TextStyle(color: Colors.white70)));
                 }),
@@ -295,7 +295,7 @@ class _BottomWidget extends State<BottomWidget> {
                 valueListenable: MyAudioHandler().durationNotifier,
                 builder: (context, value, child) {
                   return SizedBox(
-                      width: 40,
+                      width: 50,
                       child: Text(value,
                           style: const TextStyle(color: Colors.white70)));
                 }),
